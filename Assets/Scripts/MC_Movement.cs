@@ -2,20 +2,31 @@ using UnityEngine;
 
 public class MC_Movement : MonoBehaviour
 {
-    // Initialize variables
+    // =====================
+    // CONFIG
+    // =====================
     public float speed = 5f;
-    public float jumpForce = 5f;
+    public float jumpForce = 8f;
+    public int maxJumpCount = 2;
 
+    [Header("Ground Check")]
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
+    // =====================
+    // COMPONENTS
+    // =====================
     private Rigidbody2D rb;
     private Animator anim;
 
+    // =====================
+    // STATE
+    // =====================
     private bool isGrounded;
     private bool wasFalling;
-    private bool facingRight = true; 
+    private bool facingRight = true;
+    private int jumpCount;
 
     void Start()
     {
@@ -25,36 +36,38 @@ public class MC_Movement : MonoBehaviour
 
     void Update()
     {
-        float moveInput = Input.GetAxis("Horizontal");
+        float moveInput = Input.GetAxisRaw("Horizontal");
 
         // =====================
-        // MOVEMENT
+        // HORIZONTAL MOVEMENT
         // =====================
         rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
 
         // =====================
-        // FLIP LOGIC
+        // FLIP SPRITE
         // =====================
         if (moveInput > 0 && !facingRight)
             Flip();
         else if (moveInput < 0 && facingRight)
             Flip();
 
-
         anim.SetBool("Run", moveInput != 0);
         anim.SetBool("Jump", !isGrounded);
 
         // =====================
-        // JUMP INPUT
+        // JUMP INPUT (DOUBLE JUMP)
         // =====================
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumpCount)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            jumpCount++;
             wasFalling = false;
         }
 
         // =====================
-        // FALL DETECTION
+        // FALL TRANSITION
         // =====================
         if (!isGrounded && rb.linearVelocity.y < 0 && !wasFalling)
         {
@@ -72,7 +85,10 @@ public class MC_Movement : MonoBehaviour
         );
 
         if (isGrounded)
+        {
+            jumpCount = 0;
             wasFalling = false;
+        }
     }
 
     // =====================
@@ -86,7 +102,9 @@ public class MC_Movement : MonoBehaviour
         transform.localScale = scale;
     }
 
+    // =====================
     // DEBUG
+    // =====================
     void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
