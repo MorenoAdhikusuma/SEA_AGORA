@@ -1,0 +1,81 @@
+# =========================
+# Unity generated folders
+# =========================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# =========================
+# Unity cache & crash
+# =========================
+sysinfo.txt
+*.stackdump
+
+# =========================
+# Visual Studio / Rider / VSCode
+# =========================
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# =========================
+# Unity meta handling
+# =========================
+# DO NOT ignore *.meta files
+# They are REQUIRED for Unity projects
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# Builds & exports
+# =========================
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.zip
+*.rar
+
+# =========================
+# Addressables
+# =========================
+[Aa]ssets/[Aa]ddressableAssetsData/*/*.bin*
+
+# =========================
+# Crashlytics
+# =========================
+crashlytics-build.properties
+
+# =========================
+# WebGL
+# =========================
+*.mem
+*.data
+*.symbols.json
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.bak
+*.swp
