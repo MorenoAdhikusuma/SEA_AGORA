@@ -13,6 +13,12 @@ public class MC_Movement : MonoBehaviour
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
+    
+    [Header("Attack")]
+    public Transform attackPoint;
+    public float attackRange = 0.5f;
+    public LayerMask enemyLayers;
+    
 
     // =====================
     // COMPONENTS
@@ -43,6 +49,12 @@ public class MC_Movement : MonoBehaviour
         // =====================
         rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
 
+
+        if(Input.GetKeyDown(KeyCode.E))
+        {
+            Attack();
+        }
+        
         // =====================
         // FLIP SPRITE
         // =====================
@@ -71,7 +83,7 @@ public class MC_Movement : MonoBehaviour
         // =====================
         if (!isGrounded && rb.linearVelocity.y < 0 && !wasFalling)
         {
-            anim.SetTrigger("Jump_Trans");
+            anim.SetTrigger("jump_trans");
             wasFalling = true;
         }
     }
@@ -90,6 +102,28 @@ public class MC_Movement : MonoBehaviour
             wasFalling = false;
         }
     }
+
+   void Attack()
+{
+    anim.SetTrigger("Attack");
+
+    Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
+        attackPoint.position,
+        attackRange,
+        enemyLayers
+    );
+
+    foreach (Collider2D enemy in hitEnemies)
+    {
+        Enemy enemyScript = enemy.GetComponent<Enemy>();
+        if (enemyScript != null)
+        {
+            enemyScript.Die();
+        }
+    }
+
+    Debug.Log("Attack triggered, hit " + hitEnemies.Length + " enemies");
+}
 
     // =====================
     // FLIP FUNCTION
@@ -110,5 +144,10 @@ public class MC_Movement : MonoBehaviour
         if (groundCheck == null) return;
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-    }
+        if (attackPoint == null) return;
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    } 
+
+
 }
