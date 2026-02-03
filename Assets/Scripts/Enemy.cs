@@ -51,6 +51,6 @@ public class Enemy : MonoBehaviour
     private void Flip()
     {
         direction *= -1;
-        sr.flipX = direction < 0; // ✅ no scale touched
+        sr.flipX = direction < 0; 
     }
 }
