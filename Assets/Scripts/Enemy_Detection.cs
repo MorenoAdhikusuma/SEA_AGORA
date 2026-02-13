@@ -10,7 +10,7 @@ public class Enemy_Detection : MonoBehaviour
 
     private Vector3 originalPosition;
     private bool isPlayerDetected;
-
+    public float stop_distance = 1.5f;
     void Start()
     {
         originalPosition = transform.position;
@@ -36,7 +36,11 @@ public class Enemy_Detection : MonoBehaviour
         isPlayerDetected = hit != null;
     }
 
-    void MoveToPosition(Vector3 target)
+   void MoveToPosition(Vector3 target)
+{
+    float dist = Vector3.Distance(transform.position, target);
+
+    if (dist > stop_distance)
     {
         transform.position = Vector3.MoveTowards(
             transform.position,
@@ -44,11 +48,16 @@ public class Enemy_Detection : MonoBehaviour
             moveSpeed * Time.deltaTime
         );
     }
+}
 
     // BUAT DEBUG
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectionRadius);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, stop_distance);
+
     }
 }

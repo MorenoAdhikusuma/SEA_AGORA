@@ -20,9 +20,7 @@ public class MC_Movement : MonoBehaviour
     public LayerMask enemyLayers;
     
 
-    // =====================
-    // COMPONENTS
-    // =====================
+ 
     private Rigidbody2D rb;
     private Animator anim;
 
@@ -33,6 +31,7 @@ public class MC_Movement : MonoBehaviour
     private bool wasFalling;
     private bool facingRight = true;
     private int jumpCount;
+    private int Coins = 0;
 
     void Start()
     {
@@ -44,9 +43,7 @@ public class MC_Movement : MonoBehaviour
     {
         float moveInput = Input.GetAxisRaw("Horizontal");
 
-        // =====================
-        // HORIZONTAL MOVEMENT
-        // =====================
+       
         rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
 
 
@@ -125,9 +122,7 @@ public class MC_Movement : MonoBehaviour
     Debug.Log("Attack triggered, hit " + hitEnemies.Length + " enemies");
 }
 
-    // =====================
-    // FLIP FUNCTION
-    // =====================
+ 
     private void Flip()
     {
         facingRight = !facingRight;
@@ -135,6 +130,16 @@ public class MC_Movement : MonoBehaviour
         scale.x *= -1;
         transform.localScale = scale;
     }
+
+    // COINS
+    void OnTriggerEnter2D(Collider2D collision)
+{
+    if (collision.CompareTag("Coins"))
+    {
+        Game_Manager.Instance.AddCoin(1);
+        Destroy(collision.gameObject);
+    }
+}
 
     // =====================
     // DEBUG
