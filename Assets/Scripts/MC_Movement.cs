@@ -25,7 +25,16 @@ public class MC_Movement : MonoBehaviour
     public float dashTime = 0.5f;
     public float dashingCooldown = 1f;
 
-    public TrailRenderer tr; // FIXED: missing declaration
+    public TrailRenderer tr; 
+
+    [Header("Wall Jump")]
+    public Transform wallCheck;
+    public LayerMask wallLayer;
+
+    public float wallSlidingSpeed = 2f;
+    public float wallJumpingTime = 0.2f;
+    public float wallJumpingDuration = 0.4f;
+    public Vector2 wallJumpingPower = new Vector2(8f, 16f);
 
     private Rigidbody2D rb;
     private Animator anim;
@@ -42,6 +51,16 @@ public class MC_Movement : MonoBehaviour
     private bool isDashing; 
     private bool canDash = true; 
 
+    // WALL JUMP STATE
+    private bool isWallSliding;
+    private bool isWallJumping;
+    private float wallJumpingDirection;
+    private float wallJumpingCounter;
+
+    private float horizontal;
+    private bool isFacingRight = true;
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -52,9 +71,11 @@ public class MC_Movement : MonoBehaviour
     {
         float moveInput = Input.GetAxisRaw("Horizontal");
 
+        horizontal = moveInput;
+
         if (!isDashing)
-        rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
-    
+            rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
+
 
         if(Input.GetKeyDown(KeyCode.E))
         {
@@ -63,11 +84,15 @@ public class MC_Movement : MonoBehaviour
         
         // =====================
         // FLIP SPRITE
+        // FIXED: prevent flip during wall jump
         // =====================
-        if (moveInput > 0 && !facingRight)
-            Flip();
-        else if (moveInput < 0 && facingRight)
-            Flip();
+        if (!isWallJumping)
+        {
+            if (moveInput > 0 && !facingRight)
+                Flip();
+            else if (moveInput < 0 && facingRight)
+                Flip();
+        }
 
         anim.SetBool("Run", moveInput != 0);
         anim.SetBool("Jump", !isGrounded);
@@ -101,6 +126,10 @@ public class MC_Movement : MonoBehaviour
         {
             StartCoroutine(Dash());
         }
+
+        // WALL
+        WallSlide();
+        WallJump();
     }
 
     void FixedUpdate()
@@ -149,6 +178,8 @@ public class MC_Movement : MonoBehaviour
     private void Flip()
     {
         facingRight = !facingRight;
+        isFacingRight = facingRight;
+
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
@@ -190,19 +221,111 @@ public class MC_Movement : MonoBehaviour
 
 
     // =====================
+    // WALL JUMP
+    // =====================
+
+    private bool IsWalled()
+    {
+        bool isWalled = Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
+        Debug.Log("IsWalled: " + isWalled); 
+        return isWalled;
+    }
+
+    private bool IsGrounded()
+    {
+        return isGrounded;
+    }
+
+
+    private void WallSlide()
+    {
+        if (IsWalled() && !IsGrounded() && horizontal != 0f)
+        {
+            isWallSliding = true;
+
+            rb.linearVelocity = new Vector2(
+                rb.linearVelocity.x,
+                Mathf.Clamp(rb.linearVelocity.y, -wallSlidingSpeed, float.MaxValue)
+            );
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+    }
+
+
+     private void WallJump()
+    {
+        if (isWallSliding)
+        {
+            isWallJumping = false;
+
+            wallJumpingDirection = -transform.localScale.x;
+
+            wallJumpingCounter = wallJumpingTime;
+
+            CancelInvoke(nameof(StopWallJumping));
+        }
+        else
+        {
+            wallJumpingCounter -= Time.deltaTime;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && wallJumpingCounter > 0f)
+        {
+            isWallJumping = true;
+
+            rb.linearVelocity = new Vector2(
+                wallJumpingDirection * wallJumpingPower.x,
+                wallJumpingPower.y
+            );
+
+            wallJumpingCounter = 0f;
+
+            if ((wallJumpingDirection > 0 && transform.localScale.x < 0) || (wallJumpingDirection < 0 && transform.localScale.x > 0))
+            {
+                isFacingRight = !isFacingRight;
+
+                Vector3 localScale = transform.localScale;
+                localScale.x *= -1f;
+                transform.localScale = localScale;
+            }
+
+            Invoke(nameof(StopWallJumping), wallJumpingDuration);
+        }
+    }
+
+
+    private void StopWallJumping()
+    {
+        isWallJumping = false;
+        facingRight = transform.localScale.x > 0;
+    }
+
+
+    // =====================
     // DEBUG
     // =====================
     void OnDrawGizmosSelected()
     {
-        if (groundCheck == null) return;
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        if (attackPoint != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        }
 
-        if (attackPoint == null) return;
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        if (wallCheck != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(wallCheck.position, 0.2f);
+        }
     } 
 
 }
