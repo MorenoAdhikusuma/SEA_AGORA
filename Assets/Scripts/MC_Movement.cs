@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class MC_Movement : MonoBehaviour
 {
@@ -18,9 +19,14 @@ public class MC_Movement : MonoBehaviour
     public Transform attackPoint;
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
-    
 
- 
+    [Header("Dash")]
+    public float dashSpeed = 5f;
+    public float dashTime = 0.5f;
+    public float dashingCooldown = 1f;
+
+    public TrailRenderer tr; // FIXED: missing declaration
+
     private Rigidbody2D rb;
     private Animator anim;
 
@@ -33,6 +39,9 @@ public class MC_Movement : MonoBehaviour
     private int jumpCount;
     private int Coins = 0;
 
+    private bool isDashing; 
+    private bool canDash = true; 
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -43,9 +52,9 @@ public class MC_Movement : MonoBehaviour
     {
         float moveInput = Input.GetAxisRaw("Horizontal");
 
-       
+        if (!isDashing)
         rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
-
+    
 
         if(Input.GetKeyDown(KeyCode.E))
         {
@@ -68,7 +77,7 @@ public class MC_Movement : MonoBehaviour
         // =====================
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumpCount)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); 
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
             jumpCount++;
@@ -78,10 +87,19 @@ public class MC_Movement : MonoBehaviour
         // =====================
         // FALL TRANSITION
         // =====================
-        if (!isGrounded && rb.linearVelocity.y < 0 && !wasFalling)
+        if (!isGrounded && rb.linearVelocity.y < 0 && !wasFalling) 
         {
             anim.SetTrigger("jump_trans");
             wasFalling = true;
+        }
+
+        // =====================
+        // DASH
+        // =====================
+
+        if (Input.GetKeyDown(KeyCode.LeftShift)  && canDash)
+        {
+            StartCoroutine(Dash());
         }
     }
 
@@ -98,29 +116,34 @@ public class MC_Movement : MonoBehaviour
             jumpCount = 0;
             wasFalling = false;
         }
-    }
 
-   void Attack()
-{
-    anim.SetTrigger("Attack");
-
-    Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
-        attackPoint.position,
-        attackRange,
-        enemyLayers
-    );
-
-    foreach (Collider2D enemy in hitEnemies)
-    {
-        Enemy enemyScript = enemy.GetComponent<Enemy>();
-        if (enemyScript != null)
+        if (isDashing)
         {
-            enemyScript.Die();
+            return;
         }
     }
 
-    Debug.Log("Attack triggered, hit " + hitEnemies.Length + " enemies");
-}
+   void Attack()
+    {
+        anim.SetTrigger("Attack");
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
+            attackPoint.position,
+            attackRange,
+            enemyLayers
+        );
+
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            Enemy enemyScript = enemy.GetComponent<Enemy>();
+            if (enemyScript != null)
+            {
+                enemyScript.Die();
+            }
+        }
+
+        Debug.Log("Attack triggered, hit " + hitEnemies.Length + " enemies");
+    }
 
  
     private void Flip()
@@ -133,13 +156,38 @@ public class MC_Movement : MonoBehaviour
 
     // COINS
     void OnTriggerEnter2D(Collider2D collision)
-{
-    if (collision.CompareTag("Coins"))
     {
-        Game_Manager.Instance.AddCoin(1);
-        Destroy(collision.gameObject);
+        if (collision.CompareTag("Coins"))
+        {
+            Game_Manager.Instance.AddCoin(1);
+            Destroy(collision.gameObject);
+        }
     }
-}
+
+    private IEnumerator Dash()
+    {
+        canDash = false;
+        isDashing = true;
+
+        float Gravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+
+        rb.linearVelocity = new Vector2(transform.localScale.x * dashSpeed, 0f); 
+
+        tr.emitting = true;
+
+        yield return new WaitForSeconds(dashTime);
+
+        tr.emitting = false;
+
+        rb.gravityScale = Gravity;
+        isDashing = false;
+
+        yield return new WaitForSeconds(dashingCooldown);
+
+        canDash = true;
+    }
+
 
     // =====================
     // DEBUG
@@ -147,12 +195,14 @@ public class MC_Movement : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
+
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+
         if (attackPoint == null) return;
+
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     } 
-
 
 }
