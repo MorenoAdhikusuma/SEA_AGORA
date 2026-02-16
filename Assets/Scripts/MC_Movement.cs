@@ -130,6 +130,9 @@ public class MC_Movement : MonoBehaviour
         // WALL
         WallSlide();
         WallJump();
+
+
+        anim.SetBool("wall_climb", isWallSliding && rb.linearVelocity.y < 0);
     }
 
     void FixedUpdate()
@@ -237,22 +240,23 @@ public class MC_Movement : MonoBehaviour
     }
 
 
-    private void WallSlide()
+private void WallSlide()
+{
+    if (IsWalled() && !IsGrounded())
     {
-        if (IsWalled() && !IsGrounded() && horizontal != 0f)
-        {
-            isWallSliding = true;
+        isWallSliding = true;
 
-            rb.linearVelocity = new Vector2(
-                rb.linearVelocity.x,
-                Mathf.Clamp(rb.linearVelocity.y, -wallSlidingSpeed, float.MaxValue)
-            );
-        }
-        else
-        {
-            isWallSliding = false;
-        }
+        rb.linearVelocity = new Vector2(
+            rb.linearVelocity.x,
+            Mathf.Clamp(rb.linearVelocity.y, -wallSlidingSpeed, float.MaxValue)
+        );
     }
+    else
+    {
+        isWallSliding = false;
+    }
+}
+
 
 
      private void WallJump()
