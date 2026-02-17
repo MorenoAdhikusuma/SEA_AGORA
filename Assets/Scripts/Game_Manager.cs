@@ -1,27 +1,21 @@
 using UnityEngine;
 using System.Collections;
-
+using UnityEngine.SceneManagement;
 public class Game_Manager : MonoBehaviour
 {
     public static Game_Manager Instance;
 
+    [Header("Player Data")]
+    public int playerHealth = 3;
+
     [Header("Game Data")]
     public int coins = 0;
 
-    [Header("Camera Shake")]
-    public Transform cam;
-    private Vector3 originalCamPos;
-    private Coroutine shakeRoutine;
-
-    private void Awake()
-    {
-        if (Instance == null)
-            Instance = this;
-        else
-            Destroy(gameObject);
-
-        originalCamPos = cam.localPosition;
-    }
+//SINGLETON
+void Awake()
+{
+    Instance = this;
+}
 
     // ========================
     // Coins
@@ -37,34 +31,23 @@ public class Game_Manager : MonoBehaviour
         // save data
     }
 
-    // ========================
-    // Screen Shake
-    // ========================
-    public void Shake(float duration, float magnitude)
+ 
+    // TODO: NTAR DIGANTI SAMA LOGIC YANG LEBIH PROPER
+   public void MC_Die(GameObject player)
+{
+    Animator anim = player.GetComponent<Animator>();
+    anim.SetBool("Death", true);
+    Destroy(player.gameObject,0.5f);
+    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+}
+public void MC_Hit(GameObject player)
     {
-        // TODO: Implement it 
-        // stop previous shake
-        if (shakeRoutine != null)
-            StopCoroutine(shakeRoutine);
-
-        shakeRoutine = StartCoroutine(ShakeRoutine(duration, magnitude));
-    }
-
-    IEnumerator ShakeRoutine(float duration, float magnitude)
-    {
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float x = Random.Range(-1f, 1f) * magnitude;
-            float y = Random.Range(-1f, 1f) * magnitude;
-
-            cam.localPosition = originalCamPos + new Vector3(x, y, 0);
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        cam.localPosition = originalCamPos;
+        playerHealth--;
+            Debug.Log("Player hit! Health: " + playerHealth);
+    
+            if (playerHealth <= 0)
+            {
+                MC_Die(player);
+            }
     }
 }
