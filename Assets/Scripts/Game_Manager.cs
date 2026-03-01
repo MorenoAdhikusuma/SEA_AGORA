@@ -17,8 +17,9 @@ public class Game_Manager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        
     }
-
+    
 
     // ========================
     // Coins

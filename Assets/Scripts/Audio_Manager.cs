@@ -9,6 +9,10 @@ public class Audio_Manager : MonoBehaviour
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource loopSource;
 
+    [Header("Volume")]
+[Range(0f, 1f)]
+[SerializeField] private float musicVolume = 0.5f;
+
     [Header("Audio Clips")]
     public AudioClip music;
     public AudioClip jump;
@@ -29,7 +33,28 @@ public class Audio_Manager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    void Start()
+{
+    // Set volume (0 to 1)
+     musicSource.volume = musicVolume;
 
+    // Play music
+     PlayMusic();
+}
+
+    // =========================
+    // PLAY SFX
+    // =========================
+    public void PlayMusic()
+    {
+        PlayMusic(music);
+    }
+
+    void OnValidate()
+{
+    if (musicSource != null)
+        musicSource.volume = musicVolume;
+}
     // =========================
     // PLAY ONE SHOT SFX
     // =========================
